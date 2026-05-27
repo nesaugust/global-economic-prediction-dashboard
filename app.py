@@ -6,6 +6,23 @@ import joblib
 import plotly.io as pio
 
 pio.templates["professional_dark"] = pio.templates["plotly_dark"]
+
+pio.templates["professional_dark"].layout.update(
+    font=dict(family="Inter", color="#E5E7EB"),
+    paper_bgcolor="#020617",
+    plot_bgcolor="#020617",
+    colorway=["#3B82F6", "#8B5CF6", "#06B6D4", "#22C55E", "#F59E0B", "#EF4444"],
+    title=dict(font=dict(size=20, color="#F8FAFC")),
+    xaxis=dict(
+        gridcolor="rgba(148,163,184,0.18)",
+        zerolinecolor="rgba(148,163,184,0.25)"
+    ),
+    yaxis=dict(
+        gridcolor="rgba(148,163,184,0.18)",
+        zerolinecolor="rgba(148,163,184,0.25)"
+    )
+)
+
 pio.templates.default = "professional_dark"
 
 # ===============================
@@ -160,19 +177,6 @@ hr {
 </style>
 """, unsafe_allow_html=True)
 
-pio.templates["professional_dark"] = pio.templates["plotly_dark"]
-
-pio.templates["professional_dark"].layout.update(
-    font=dict(family="Inter", color="#E5E7EB"),
-    paper_bgcolor="#020617",
-    plot_bgcolor="#020617",
-    colorway=["#3B82F6", "#8B5CF6", "#06B6D4", "#22C55E", "#F59E0B", "#EF4444"],
-    title=dict(font=dict(size=20, color="#F8FAFC")),
-    xaxis=dict(gridcolor="rgba(148,163,184,0.18)", zerolinecolor="rgba(148,163,184,0.25)"),
-    yaxis=dict(gridcolor="rgba(148,163,184,0.18)", zerolinecolor="rgba(148,163,184,0.25)")
-)
-
-pio.templates.default = "professional_dark"
 
 # ===============================
 # LOAD DATA
