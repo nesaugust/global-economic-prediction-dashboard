@@ -117,12 +117,12 @@ hr {
 # ===============================
 @st.cache_data
 def load_data():
-    df = pd.read_csv("processed_global_economy_data.csv")
-    risk_df = pd.read_csv("risk_score_data.csv")
-    score_df = pd.read_csv("economic_score_data.csv")
-    cluster_df = pd.read_csv("country_cluster_data.csv")
-    anomaly_df = pd.read_csv("anomaly_detection_data.csv")
-    recession_df = pd.read_csv("recession_probability_data.csv")
+    df = pd.read_csv("Prediction_Data/processed_global_economy_data.csv")
+    risk_df = pd.read_csv("Prediction_Data/risk_score_data.csv")
+    score_df = pd.read_csv("Prediction_Data/economic_score_data.csv")
+    cluster_df = pd.read_csv("Prediction_Data/country_cluster_data.csv")
+    anomaly_df = pd.read_csv("Prediction_Data/anomaly_detection_data.csv")
+    recession_df = pd.read_csv("Prediction_Data/recession_probability_data.csv")
     return df, risk_df, score_df, cluster_df, anomaly_df, recession_df
 
 df, risk_df, score_df, cluster_df, anomaly_df, recession_df = load_data()
