@@ -22,73 +22,100 @@ st.set_page_config(
 # ===============================
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
 .stApp {
-    background: linear-gradient(135deg, #0F172A 0%, #111827 45%, #1E293B 100%);
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,0.22), transparent 35%),
+        radial-gradient(circle at top right, rgba(124,58,237,0.20), transparent 35%),
+        linear-gradient(135deg, #020617 0%, #0F172A 45%, #111827 100%);
     color: #F8FAFC;
 }
 
 .block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-    max-width: 1250px;
+    padding-top: 2.5rem;
+    padding-bottom: 4rem;
+    max-width: 1280px;
 }
 
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #111827 0%, #1E293B 100%);
-    border-right: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, #020617 0%, #0F172A 55%, #111827 100%);
+    border-right: 1px solid rgba(148,163,184,0.18);
+}
+
+section[data-testid="stSidebar"] h1 {
+    font-size: 34px !important;
+    line-height: 1.15;
 }
 
 section[data-testid="stSidebar"] * {
-    color: #F8FAFC;
+    color: #E5E7EB;
 }
 
 h1 {
-    font-size: 42px !important;
+    font-size: 46px !important;
     font-weight: 800 !important;
+    letter-spacing: -1px;
     color: #F8FAFC !important;
 }
 
 h2, h3 {
-    color: #E5E7EB !important;
-    font-weight: 700 !important;
+    color: #F1F5F9 !important;
+    font-weight: 800 !important;
 }
 
-[data-testid="stMetricValue"] {
-    font-size: 28px;
-    font-weight: 800;
+p, span, label {
+    color: #CBD5E1 !important;
 }
 
 .metric-card {
-    background: linear-gradient(135deg, #2563EB, #7C3AED);
-    padding: 24px;
-    border-radius: 22px;
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 55%, #9333EA 100%);
+    padding: 26px;
+    border-radius: 26px;
     color: white;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.28);
-    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 20px 45px rgba(37,99,235,0.25);
+    border: 1px solid rgba(255,255,255,0.18);
+    transition: all 0.25s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 55px rgba(124,58,237,0.35);
 }
 
 .metric-title {
     font-size: 14px;
     color: #DBEAFE;
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .metric-value {
-    font-size: 30px;
+    font-size: 34px;
     font-weight: 800;
-    margin-top: 8px;
+    margin-top: 12px;
+    color: #FFFFFF;
 }
 
 .section-card {
-    background: rgba(15, 23, 42, 0.88);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    padding: 24px;
-    border-radius: 24px;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    padding: 26px;
+    border-radius: 28px;
+    box-shadow: 0 22px 55px rgba(0,0,0,0.32);
+}
+
+[data-testid="stVerticalBlock"] > div {
+    gap: 1.1rem;
 }
 
 div[data-testid="stDataFrame"] {
-    border-radius: 18px;
+    border-radius: 20px;
     overflow: hidden;
     border: 1px solid rgba(148, 163, 184, 0.25);
 }
@@ -97,20 +124,55 @@ div[data-testid="stDataFrame"] {
     background: linear-gradient(135deg, #2563EB, #7C3AED);
     color: white;
     border: none;
-    border-radius: 14px;
-    padding: 0.7rem 1.3rem;
-    font-weight: 700;
+    border-radius: 16px;
+    padding: 0.8rem 1.4rem;
+    font-weight: 800;
+    box-shadow: 0 12px 30px rgba(37,99,235,0.25);
 }
 
-.stSelectbox, .stNumberInput, .stMultiSelect {
+.stButton > button:hover {
+    background: linear-gradient(135deg, #1D4ED8, #6D28D9);
+    transform: translateY(-2px);
+}
+
+div[data-baseweb="select"] > div {
+    background-color: #020617;
+    border: 1px solid rgba(148,163,184,0.35);
     border-radius: 14px;
+}
+
+input {
+    background-color: #020617 !important;
+    color: #F8FAFC !important;
+    border-radius: 14px !important;
 }
 
 hr {
-    border-color: rgba(255,255,255,0.12);
+    border-color: rgba(148,163,184,0.2);
+}
+
+.js-plotly-plot {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.25);
 }
 </style>
 """, unsafe_allow_html=True)
+
+pio.templates["professional_dark"] = pio.templates["plotly_dark"]
+
+pio.templates["professional_dark"].layout.update(
+    font=dict(family="Inter", color="#E5E7EB"),
+    paper_bgcolor="#020617",
+    plot_bgcolor="#020617",
+    colorway=["#3B82F6", "#8B5CF6", "#06B6D4", "#22C55E", "#F59E0B", "#EF4444"],
+    title=dict(font=dict(size=20, color="#F8FAFC")),
+    xaxis=dict(gridcolor="rgba(148,163,184,0.18)", zerolinecolor="rgba(148,163,184,0.25)"),
+    yaxis=dict(gridcolor="rgba(148,163,184,0.18)", zerolinecolor="rgba(148,163,184,0.25)")
+)
+
+pio.templates.default = "professional_dark"
 
 # ===============================
 # LOAD DATA
