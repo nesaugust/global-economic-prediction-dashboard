@@ -5,9 +5,6 @@ import plotly.express as px
 import plotly.io as pio
 import joblib
 
-# ===============================
-# PAGE CONFIG
-# ===============================
 st.set_page_config(
     page_title="Global Economic Intelligence Platform",
     page_icon="🌍",
@@ -15,42 +12,9 @@ st.set_page_config(
 )
 
 # ===============================
-# PROFESSIONAL PLOTLY TEMPLATE
+# SAFE PLOTLY TEMPLATE
 # ===============================
-pio.templates["executive_dark"] = pio.templates["plotly_dark"]
-
-pio.templates["executive_dark"].layout.update(
-    font=dict(family="Inter, Arial", color="#CBD5E1", size=13),
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    colorway=[
-        "#3B82F6",
-        "#38BDF8",
-        "#60A5FA",
-        "#22C55E",
-        "#F59E0B",
-        "#EF4444",
-    ],
-    title=dict(
-        font=dict(size=18, color="#F8FAFC")
-    ),
-    xaxis=dict(
-        gridcolor="rgba(148,163,184,0.08)",
-        zerolinecolor="rgba(148,163,184,0.12)",
-        linecolor="rgba(148,163,184,0.20)",
-        tickfont=dict(color="#94A3B8"),
-        titlefont=dict(color="#94A3B8"),
-    ),
-    yaxis=dict(
-        gridcolor="rgba(148,163,184,0.10)",
-        zerolinecolor="rgba(148,163,184,0.12)",
-        linecolor="rgba(148,163,184,0.20)",
-        tickfont=dict(color="#94A3B8"),
-        titlefont=dict(color="#94A3B8"),
-    ),
-)
-
-pio.templates.default = "executive_dark"
+pio.templates.default = "plotly_dark"
 
 # ===============================
 # CUSTOM CSS
@@ -65,8 +29,8 @@ html, body, [class*="css"] {
 
 .stApp {
     background:
-        radial-gradient(circle at top left, rgba(59,130,246,0.12), transparent 32%),
-        linear-gradient(135deg, #020617 0%, #0B1120 45%, #111827 100%);
+        radial-gradient(circle at top left, rgba(59,130,246,0.10), transparent 30%),
+        linear-gradient(135deg, #020617 0%, #0B1120 48%, #111827 100%);
     color: #F8FAFC;
 }
 
@@ -76,10 +40,9 @@ html, body, [class*="css"] {
     max-width: 1380px;
 }
 
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background: #020617;
-    border-right: 1px solid rgba(148,163,184,0.18);
+    border-right: 1px solid rgba(148,163,184,0.16);
 }
 
 section[data-testid="stSidebar"] * {
@@ -91,11 +54,6 @@ section[data-testid="stSidebar"] h1 {
     font-weight: 800 !important;
 }
 
-[data-testid="stSidebar"] div[data-baseweb="radio"] label {
-    padding: 0.45rem 0;
-}
-
-/* Text */
 h1 {
     font-size: 42px !important;
     font-weight: 800 !important;
@@ -112,14 +70,13 @@ p, span, label {
     color: #CBD5E1 !important;
 }
 
-/* Hero */
 .hero-card {
-    background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.78));
-    border: 1px solid rgba(148,163,184,0.18);
-    border-radius: 28px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.72));
+    border: 1px solid rgba(148,163,184,0.16);
+    border-radius: 26px;
     padding: 30px 34px;
     margin-bottom: 22px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.32);
+    box-shadow: 0 22px 55px rgba(0,0,0,0.28);
 }
 
 .hero-title {
@@ -137,13 +94,12 @@ p, span, label {
     max-width: 900px;
 }
 
-/* KPI cards */
 .metric-card {
-    background: #0F172A;
-    border: 1px solid rgba(148,163,184,0.16);
-    border-radius: 22px;
+    background: rgba(15,23,42,0.88);
+    border: 1px solid rgba(148,163,184,0.14);
+    border-radius: 20px;
     padding: 22px 24px;
-    box-shadow: 0 14px 35px rgba(0,0,0,0.24);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
 }
 
 .metric-title {
@@ -167,28 +123,17 @@ p, span, label {
     margin-top: 4px;
 }
 
-/* Cards */
-.section-card {
-    background: rgba(15,23,42,0.94);
-    border: 1px solid rgba(148,163,184,0.16);
-    padding: 24px;
-    border-radius: 24px;
-    box-shadow: 0 18px 42px rgba(0,0,0,0.26);
-    margin-bottom: 18px;
-}
-
 .insight-box {
-    background: rgba(37,99,235,0.10);
-    border: 1px solid rgba(96,165,250,0.24);
+    background: rgba(37,99,235,0.09);
+    border: 1px solid rgba(96,165,250,0.20);
     border-left: 4px solid #3B82F6;
     padding: 18px 20px;
-    border-radius: 18px;
+    border-radius: 16px;
     margin: 14px 0 22px 0;
     color: #DDEAFE;
     line-height: 1.6;
 }
 
-/* Buttons */
 .stButton > button {
     background: #2563EB;
     color: white !important;
@@ -196,40 +141,35 @@ p, span, label {
     border-radius: 14px;
     padding: 0.72rem 1.2rem;
     font-weight: 700;
-    box-shadow: 0 10px 24px rgba(37,99,235,0.25);
+    box-shadow: 0 10px 24px rgba(37,99,235,0.22);
 }
 
 .stButton > button:hover {
     background: #1D4ED8;
-    transform: translateY(-1px);
 }
 
-/* Inputs */
 div[data-baseweb="select"] > div,
 input {
     background-color: #0F172A !important;
-    border: 1px solid rgba(148,163,184,0.28) !important;
+    border: 1px solid rgba(148,163,184,0.26) !important;
     border-radius: 14px !important;
     color: #F8FAFC !important;
 }
 
-/* Dataframes */
 div[data-testid="stDataFrame"] {
     border-radius: 18px;
     overflow: hidden;
     border: 1px solid rgba(148,163,184,0.20);
 }
 
-/* Plotly */
 .js-plotly-plot {
-    background: rgba(15,23,42,0.72) !important;
+    background: rgba(15,23,42,0.68) !important;
     border-radius: 22px;
     overflow: hidden;
-    border: 1px solid rgba(148,163,184,0.14);
-    box-shadow: 0 16px 38px rgba(0,0,0,0.22);
+    border: 1px solid rgba(148,163,184,0.12);
+    box-shadow: 0 14px 34px rgba(0,0,0,0.20);
 }
 
-/* Tabs */
 button[data-baseweb="tab"] {
     font-weight: 700;
 }
@@ -309,35 +249,29 @@ def insight(text):
 
 def style_fig(fig, height=430):
     fig.update_layout(
+        template="plotly_dark",
         height=height,
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(15,23,42,0.45)",
-
+        plot_bgcolor="rgba(15,23,42,0.55)",
         font=dict(
             family="Inter, Arial",
             size=13,
-            color="#CBD5E1"
+            color="#CBD5E1",
         ),
-
         title=dict(
             x=0.02,
             xanchor="left",
-            font=dict(
-                size=18,
-                color="#F8FAFC"
-            )
+            font=dict(size=18, color="#F8FAFC"),
         ),
-
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=1.03,
             xanchor="left",
             x=0,
-            font=dict(color="#CBD5E1")
+            font=dict(color="#CBD5E1"),
         ),
-
-        margin=dict(l=36, r=28, t=72, b=46),
+        margin=dict(l=42, r=28, t=72, b=46),
         hovermode="x unified",
     )
 
@@ -347,7 +281,7 @@ def style_fig(fig, height=430):
         showline=True,
         linecolor="rgba(148,163,184,0.18)",
         tickfont=dict(color="#94A3B8"),
-        titlefont=dict(color="#94A3B8"),
+        title_font=dict(color="#94A3B8"),
     )
 
     fig.update_yaxes(
@@ -356,12 +290,13 @@ def style_fig(fig, height=430):
         zeroline=False,
         showline=False,
         tickfont=dict(color="#94A3B8"),
-        titlefont=dict(color="#94A3B8"),
+        title_font=dict(color="#94A3B8"),
     )
 
-    fig.update_traces(
-        marker=dict(size=6, line=dict(width=0)),
-    )
+    try:
+        fig.update_traces(marker=dict(size=6, line=dict(width=0)))
+    except Exception:
+        pass
 
     return fig
 
@@ -416,7 +351,7 @@ if page == "Global Overview":
     year_df = df[df["Year"] == selected_year].copy()
 
     insight(
-        f"<b>Executive summary:</b> In {selected_year}, the dashboard tracks average GDP, inflation, unemployment, and GDP growth across the available countries. Use the trend panels below to identify macroeconomic direction and potential instability."
+        f"<b>Executive summary:</b> In {selected_year}, this dashboard tracks GDP, inflation, unemployment, and GDP growth across available countries."
     )
 
     c1, c2, c3, c4 = st.columns(4)
@@ -442,7 +377,12 @@ if page == "Global Overview":
             color_continuous_scale="Blues",
         )
         fig = style_fig(fig, height=520)
-        fig.update_geos(bgcolor="#0B1120", showframe=False, showcoastlines=True, coastlinecolor="#334155")
+        fig.update_geos(
+            bgcolor="rgba(0,0,0,0)",
+            showframe=False,
+            showcoastlines=True,
+            coastlinecolor="#334155",
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
@@ -564,6 +504,7 @@ elif page == "Trade Analytics":
             title=f"Trade Balance — {selected_country}",
         )
         fig = style_fig(fig)
+        fig.update_traces(marker_color="#3B82F6")
         st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
