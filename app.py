@@ -16,9 +16,6 @@ st.set_page_config(
 # ===============================
 pio.templates.default = "plotly_dark"
 
-# ===============================
-# CUSTOM CSS
-# ===============================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -29,20 +26,23 @@ html, body, [class*="css"] {
 
 .stApp {
     background:
-        radial-gradient(circle at top left, rgba(59,130,246,0.10), transparent 30%),
-        linear-gradient(135deg, #020617 0%, #0B1120 48%, #111827 100%);
+        radial-gradient(circle at 25% 10%, rgba(37,99,235,0.18), transparent 28%),
+        radial-gradient(circle at 85% 5%, rgba(14,165,233,0.10), transparent 26%),
+        linear-gradient(135deg, #030712 0%, #07111f 42%, #0b1220 100%);
     color: #F8FAFC;
 }
 
 .block-container {
-    padding-top: 2rem;
+    padding-top: 1.6rem;
     padding-bottom: 4rem;
-    max-width: 1380px;
+    max-width: 1320px;
 }
 
+/* Sidebar */
 section[data-testid="stSidebar"] {
-    background: #020617;
-    border-right: 1px solid rgba(148,163,184,0.16);
+    background:
+        linear-gradient(180deg, #030712 0%, #07111f 55%, #020617 100%);
+    border-right: 1px solid rgba(148,163,184,0.14);
 }
 
 section[data-testid="stSidebar"] * {
@@ -50,10 +50,21 @@ section[data-testid="stSidebar"] * {
 }
 
 section[data-testid="stSidebar"] h1 {
-    font-size: 26px !important;
+    font-size: 25px !important;
     font-weight: 800 !important;
 }
 
+[data-testid="stSidebar"] div[role="radiogroup"] label {
+    background: transparent;
+    border-radius: 14px;
+    padding: 0.45rem 0.55rem;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+    background: rgba(37,99,235,0.18);
+}
+
+/* Text */
 h1 {
     font-size: 42px !important;
     font-weight: 800 !important;
@@ -70,84 +81,104 @@ p, span, label {
     color: #CBD5E1 !important;
 }
 
+/* Hero */
 .hero-card {
-    background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.72));
-    border: 1px solid rgba(148,163,184,0.16);
-    border-radius: 26px;
-    padding: 30px 34px;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(59,130,246,0.26), transparent 34%),
+        linear-gradient(135deg, #172554 0%, #10203d 45%, #111827 100%);
+    border: 1px solid rgba(96,165,250,0.28);
+    border-radius: 28px;
+    padding: 34px 38px;
     margin-bottom: 22px;
-    box-shadow: 0 22px 55px rgba(0,0,0,0.28);
+    box-shadow: 0 24px 65px rgba(2,6,23,0.34);
 }
 
 .hero-title {
     font-size: 44px;
     font-weight: 800;
-    color: #F8FAFC;
+    color: #FFFFFF;
     letter-spacing: -1.1px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .hero-subtitle {
     font-size: 15px;
-    color: #94A3B8;
-    line-height: 1.65;
-    max-width: 900px;
+    color: #BFDBFE;
+    line-height: 1.7;
+    max-width: 920px;
 }
 
+/* Executive summary */
+.insight-box {
+    background:
+        linear-gradient(135deg, rgba(15,23,42,0.92), rgba(15,23,42,0.72));
+    border: 1px solid rgba(96,165,250,0.24);
+    border-left: 4px solid #3B82F6;
+    padding: 18px 22px;
+    border-radius: 18px;
+    margin: 14px 0 22px 0;
+    color: #DBEAFE;
+    line-height: 1.6;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.20);
+}
+
+/* KPI cards */
 .metric-card {
-    background: rgba(15,23,42,0.88);
-    border: 1px solid rgba(148,163,184,0.14);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    background:
+        linear-gradient(145deg, rgba(30,41,59,0.92), rgba(15,23,42,0.92));
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 22px;
+    padding: 24px 24px;
+    box-shadow: 0 18px 42px rgba(0,0,0,0.26);
+    min-height: 125px;
+}
+
+.metric-card:hover {
+    border-color: rgba(96,165,250,0.38);
+    transform: translateY(-2px);
+    transition: all 0.18s ease;
 }
 
 .metric-title {
     font-size: 12px;
-    color: #94A3B8;
-    font-weight: 700;
+    color: #93C5FD;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
 }
 
 .metric-value {
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 800;
-    margin-top: 10px;
-    color: #F8FAFC;
+    margin-top: 12px;
+    color: #FFFFFF;
 }
 
 .metric-note {
     font-size: 12px;
-    color: #64748B;
-    margin-top: 4px;
+    color: #94A3B8;
+    margin-top: 8px;
 }
 
-.insight-box {
-    background: rgba(37,99,235,0.09);
-    border: 1px solid rgba(96,165,250,0.20);
-    border-left: 4px solid #3B82F6;
-    padding: 18px 20px;
-    border-radius: 16px;
-    margin: 14px 0 22px 0;
-    color: #DDEAFE;
-    line-height: 1.6;
+/* Tabs container effect */
+div[data-testid="stTabs"] {
+    background: rgba(15,23,42,0.42);
+    border: 1px solid rgba(148,163,184,0.10);
+    border-radius: 22px;
+    padding: 10px 16px 16px 16px;
+    margin-top: 10px;
 }
 
-.stButton > button {
-    background: #2563EB;
-    color: white !important;
-    border: none;
-    border-radius: 14px;
-    padding: 0.72rem 1.2rem;
-    font-weight: 700;
-    box-shadow: 0 10px 24px rgba(37,99,235,0.22);
+button[data-baseweb="tab"] {
+    font-weight: 800;
+    color: #CBD5E1 !important;
 }
 
-.stButton > button:hover {
-    background: #1D4ED8;
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #60A5FA !important;
 }
 
+/* Inputs */
 div[data-baseweb="select"] > div,
 input {
     background-color: #0F172A !important;
@@ -156,51 +187,64 @@ input {
     color: #F8FAFC !important;
 }
 
-/* Dataframe Styling */
+/* Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: white !important;
+    border: none;
+    border-radius: 14px;
+    padding: 0.72rem 1.2rem;
+    font-weight: 800;
+    box-shadow: 0 12px 28px rgba(37,99,235,0.24);
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #1D4ED8, #1E40AF);
+}
+
+/* Plotly chart card */
+.js-plotly-plot {
+    background:
+        linear-gradient(145deg, rgba(15,23,42,0.94), rgba(17,24,39,0.90)) !important;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(148,163,184,0.14);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.24);
+}
+
+/* Dataframes */
 div[data-testid="stDataFrame"] {
     background: #0F172A !important;
     border-radius: 18px;
     overflow: hidden;
-    border: 1px solid rgba(148,163,184,0.15);
+    border: 1px solid rgba(148,163,184,0.16);
 }
 
-/* Header */
 div[data-testid="stDataFrame"] thead tr th {
-    background: #243447 !important;
+    background: #1E293B !important;
     color: #F8FAFC !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
 }
 
-/* Body */
 div[data-testid="stDataFrame"] tbody tr {
-    background: #101827 !important;
+    background: #0F172A !important;
 }
 
-/* Alternate rows */
 div[data-testid="stDataFrame"] tbody tr:nth-child(even) {
     background: #111827 !important;
 }
 
-/* Text */
 div[data-testid="stDataFrame"] td {
     color: #CBD5E1 !important;
 }
 
-/* Hover */
 div[data-testid="stDataFrame"] tbody tr:hover {
     background: #1F2937 !important;
 }
 
-.js-plotly-plot {
-    background: rgba(15,23,42,0.68) !important;
-    border-radius: 22px;
-    overflow: hidden;
-    border: 1px solid rgba(148,163,184,0.12);
-    box-shadow: 0 14px 34px rgba(0,0,0,0.20);
-}
-
-button[data-baseweb="tab"] {
-    font-weight: 700;
+/* Reduce default white top gap */
+header[data-testid="stHeader"] {
+    background: transparent;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -281,7 +325,7 @@ def style_fig(fig, height=430):
         template="plotly_dark",
         height=height,
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(15,23,42,0.55)",
+        plot_bgcolor="rgba(2,6,23,0.18)",
         font=dict(
             family="Inter, Arial",
             size=13,
@@ -326,6 +370,10 @@ def style_fig(fig, height=430):
         fig.update_traces(marker=dict(size=6, line=dict(width=0)))
     except Exception:
         pass
+        
+    fig.update_layout(
+        colorway=["#3B82F6", "#38BDF8", "#818CF8", "#22C55E", "#F59E0B", "#EF4444"]
+    )
 
     return fig
 
