@@ -20,20 +20,33 @@ st.set_page_config(
 pio.templates["executive_dark"] = pio.templates["plotly_dark"]
 
 pio.templates["executive_dark"].layout.update(
-    font=dict(family="Inter, Arial", color="#E5E7EB", size=13),
-    paper_bgcolor="#0B1120",
-    plot_bgcolor="#0B1120",
-    colorway=["#3B82F6", "#60A5FA", "#93C5FD", "#38BDF8", "#22C55E", "#F59E0B", "#EF4444"],
-    title=dict(font=dict(size=18, color="#F8FAFC")),
+    font=dict(family="Inter, Arial", color="#CBD5E1", size=13),
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    colorway=[
+        "#3B82F6",
+        "#38BDF8",
+        "#60A5FA",
+        "#22C55E",
+        "#F59E0B",
+        "#EF4444",
+    ],
+    title=dict(
+        font=dict(size=18, color="#F8FAFC")
+    ),
     xaxis=dict(
-        gridcolor="rgba(148,163,184,0.12)",
-        zerolinecolor="rgba(148,163,184,0.18)",
-        linecolor="rgba(148,163,184,0.25)",
+        gridcolor="rgba(148,163,184,0.08)",
+        zerolinecolor="rgba(148,163,184,0.12)",
+        linecolor="rgba(148,163,184,0.20)",
+        tickfont=dict(color="#94A3B8"),
+        titlefont=dict(color="#94A3B8"),
     ),
     yaxis=dict(
-        gridcolor="rgba(148,163,184,0.12)",
-        zerolinecolor="rgba(148,163,184,0.18)",
-        linecolor="rgba(148,163,184,0.25)",
+        gridcolor="rgba(148,163,184,0.10)",
+        zerolinecolor="rgba(148,163,184,0.12)",
+        linecolor="rgba(148,163,184,0.20)",
+        tickfont=dict(color="#94A3B8"),
+        titlefont=dict(color="#94A3B8"),
     ),
 )
 
@@ -209,10 +222,11 @@ div[data-testid="stDataFrame"] {
 
 /* Plotly */
 .js-plotly-plot {
+    background: rgba(15,23,42,0.72) !important;
     border-radius: 22px;
     overflow: hidden;
     border: 1px solid rgba(148,163,184,0.14);
-    box-shadow: 0 16px 38px rgba(0,0,0,0.24);
+    box-shadow: 0 16px 38px rgba(0,0,0,0.22);
 }
 
 /* Tabs */
@@ -296,19 +310,59 @@ def insight(text):
 def style_fig(fig, height=430):
     fig.update_layout(
         height=height,
-        margin=dict(l=28, r=28, t=72, b=40),
-        title=dict(x=0.02, xanchor="left"),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(15,23,42,0.45)",
+
+        font=dict(
+            family="Inter, Arial",
+            size=13,
+            color="#CBD5E1"
+        ),
+
+        title=dict(
+            x=0.02,
+            xanchor="left",
+            font=dict(
+                size=18,
+                color="#F8FAFC"
+            )
+        ),
+
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=1.03,
             xanchor="left",
             x=0,
+            font=dict(color="#CBD5E1")
         ),
+
+        margin=dict(l=36, r=28, t=72, b=46),
         hovermode="x unified",
     )
-    fig.update_xaxes(showgrid=False, ticks="outside")
-    fig.update_yaxes(gridcolor="rgba(148,163,184,0.13)", ticks="outside")
+
+    fig.update_xaxes(
+        showgrid=False,
+        zeroline=False,
+        showline=True,
+        linecolor="rgba(148,163,184,0.18)",
+        tickfont=dict(color="#94A3B8"),
+        titlefont=dict(color="#94A3B8"),
+    )
+
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(148,163,184,0.10)",
+        zeroline=False,
+        showline=False,
+        tickfont=dict(color="#94A3B8"),
+        titlefont=dict(color="#94A3B8"),
+    )
+
+    fig.update_traces(
+        marker=dict(size=6, line=dict(width=0)),
+    )
+
     return fig
 
 
