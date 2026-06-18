@@ -156,10 +156,39 @@ input {
     color: #F8FAFC !important;
 }
 
+/* Dataframe Styling */
 div[data-testid="stDataFrame"] {
+    background: #0F172A !important;
     border-radius: 18px;
     overflow: hidden;
-    border: 1px solid rgba(148,163,184,0.20);
+    border: 1px solid rgba(148,163,184,0.15);
+}
+
+/* Header */
+div[data-testid="stDataFrame"] thead tr th {
+    background: #243447 !important;
+    color: #F8FAFC !important;
+    font-weight: 700 !important;
+}
+
+/* Body */
+div[data-testid="stDataFrame"] tbody tr {
+    background: #101827 !important;
+}
+
+/* Alternate rows */
+div[data-testid="stDataFrame"] tbody tr:nth-child(even) {
+    background: #111827 !important;
+}
+
+/* Text */
+div[data-testid="stDataFrame"] td {
+    color: #CBD5E1 !important;
+}
+
+/* Hover */
+div[data-testid="stDataFrame"] tbody tr:hover {
+    background: #1F2937 !important;
 }
 
 .js-plotly-plot {
