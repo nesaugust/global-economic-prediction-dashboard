@@ -115,6 +115,7 @@ p, span, label { color: #CBD5E1 !important; }
 /* Section / panel wrapper */
 .panel-title { font-size: 17px; font-weight: 800; color: #F8FAFC; margin-bottom: 2px; }
 .panel-sub { font-size: 12px; color: #64748B; margin-bottom: 10px; }
+.chart-caption { font-size: 14px; font-weight: 700; color: #F8FAFC; margin: 2px 0 6px 4px; }
 
 /* Risk / status chips */
 .risk-chip {
@@ -188,9 +189,38 @@ def load_data():
 
 df, risk_df, score_df, cluster_df, anomaly_df, recession_df = load_data()
 
+RISK_LEVEL_ALIASES = {
+    "low": {"low", "low risk", "minimal", "safe"},
+    "medium": {"medium", "moderate", "mid", "medium risk", "average"},
+    "high": {"high", "high risk", "elevated"},
+    "crisis": {"crisis", "critical", "very high", "severe", "crisis risk", "extreme"},
+}
+
+
+def _normalized_risk_series():
+    return risk_df["Risk_Level"].astype(str).str.strip().str.lower()
+
+
+def risk_level_counts():
+    """Case/whitespace/synonym-tolerant counts for the four risk chips.
+    Falls back to 0 for a bucket only if truly nothing in Risk_Level matches
+    any known alias for it — which usually means the source CSV uses a label
+    we haven't seen yet (surfaced via risk_level_raw_values() below)."""
+    normalized = _normalized_risk_series()
+    return {
+        bucket: int(normalized.isin(aliases).sum())
+        for bucket, aliases in RISK_LEVEL_ALIASES.items()
+    }
+
+
+def risk_level_raw_values():
+    return sorted(risk_df["Risk_Level"].dropna().astype(str).unique().tolist())
+
+
 if "Crisis_Alert" not in risk_df.columns:
+    _normalized = _normalized_risk_series()
     risk_df["Crisis_Alert"] = np.where(
-        risk_df["Risk_Level"].astype(str).str.lower().eq("high"),
+        _normalized.isin(RISK_LEVEL_ALIASES["crisis"] | RISK_LEVEL_ALIASES["high"]),
         "Crisis Warning",
         "Normal",
     )
@@ -325,29 +355,28 @@ def insight(text):
 
 
 def style_fig(fig, height=430, title=None):
-    # Only ever touch the `title` layout property when there is real text to show.
-    # Setting title_x / title_font / etc. on a figure with NO title text forces
-    # Plotly to build an incomplete title object, which is what was rendering
-    # as the literal string "undefined". So: resolve the text first, and only
-    # pass a title kwarg to update_layout when text is non-empty.
+    # IMPORTANT: Plotly's own built-in `title` layout property is never used
+    # for rendering here, full stop — no conditionals. Some chart/Streamlit
+    # component combinations render an incomplete title object (one with no
+    # `text`) as the literal string "undefined", and since that's exactly the
+    # object Plotly Express creates whenever a chart is built without an
+    # explicit title= kwarg, the only bulletproof fix is to never let Plotly
+    # touch the title at all. Instead, we pull out whatever title text the
+    # chart was given (either passed in here, or set via px's title= kwarg)
+    # and print it ourselves as a plain HTML caption right above the chart.
     resolved_title = title
     if resolved_title is None and fig.layout.title is not None:
         resolved_title = fig.layout.title.text
 
-    layout_kwargs = dict(
+    fig.update_layout(
         template="plotly_dark", height=height,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(2,6,23,0.18)",
         font=dict(family="Inter, Arial", size=13, color="#CBD5E1"),
+        title=None,
         legend=dict(orientation="h", yanchor="bottom", y=1.03, xanchor="left", x=0, font=dict(color="#CBD5E1")),
-        margin=dict(l=42, r=28, t=64, b=46),
+        margin=dict(l=42, r=28, t=54, b=46),
         hovermode="x unified",
     )
-    if resolved_title:
-        layout_kwargs["title"] = dict(text=resolved_title, x=0.02, xanchor="left", font=dict(size=17, color="#F8FAFC"))
-    else:
-        layout_kwargs["title"] = None  # explicitly clear, never leave a text-less title object behind
-
-    fig.update_layout(**layout_kwargs)
     fig.update_xaxes(showgrid=False, zeroline=False, showline=True, linecolor="rgba(148,163,184,0.18)",
                       tickfont=dict(color="#94A3B8"), title_font=dict(color="#94A3B8"))
     fig.update_yaxes(showgrid=True, gridcolor="rgba(148,163,184,0.10)", zeroline=False, showline=False,
@@ -357,6 +386,10 @@ def style_fig(fig, height=430, title=None):
     except Exception:
         pass
     fig.update_layout(colorway=["#3B82F6", "#38BDF8", "#818CF8", "#22C55E", "#F59E0B", "#EF4444"])
+
+    if resolved_title:
+        st.markdown(f"<div class='chart-caption'>{resolved_title}</div>", unsafe_allow_html=True)
+
     return fig
 
 
@@ -568,22 +601,23 @@ if page == "Global Overview":
 
     with p2:
         st.markdown("<div class='panel-title'>Risk Intelligence</div>", unsafe_allow_html=True)
-        counts = risk_df["Risk_Level"].astype(str).str.title().value_counts()
-        crisis_count = int((risk_df["Crisis_Alert"] == "Crisis Warning").sum())
+        counts = risk_level_counts()
         rc1, rc2 = st.columns(2)
         with rc1:
             st.markdown(f"<div class='risk-chip' style='background:rgba(5,150,105,0.12);border-color:rgba(5,150,105,0.35);'>"
-                        f"<div class='rc-label'>Low Risk</div><div class='rc-count'>{int(counts.get('Low', 0))}</div></div>", unsafe_allow_html=True)
+                        f"<div class='rc-label'>Low Risk</div><div class='rc-count'>{counts['low']}</div></div>", unsafe_allow_html=True)
         with rc2:
             st.markdown(f"<div class='risk-chip' style='background:rgba(217,119,6,0.12);border-color:rgba(217,119,6,0.35);'>"
-                        f"<div class='rc-label'>Medium Risk</div><div class='rc-count'>{int(counts.get('Medium', 0))}</div></div>", unsafe_allow_html=True)
+                        f"<div class='rc-label'>Medium Risk</div><div class='rc-count'>{counts['medium']}</div></div>", unsafe_allow_html=True)
         rc3, rc4 = st.columns(2)
         with rc3:
             st.markdown(f"<div class='risk-chip' style='background:rgba(234,88,12,0.12);border-color:rgba(234,88,12,0.35);'>"
-                        f"<div class='rc-label'>High Risk</div><div class='rc-count'>{int(counts.get('High', 0))}</div></div>", unsafe_allow_html=True)
+                        f"<div class='rc-label'>High Risk</div><div class='rc-count'>{counts['high']}</div></div>", unsafe_allow_html=True)
         with rc4:
             st.markdown(f"<div class='risk-chip' style='background:rgba(220,38,38,0.12);border-color:rgba(220,38,38,0.35);'>"
-                        f"<div class='rc-label'>Crisis Risk</div><div class='rc-count'>{crisis_count}</div></div>", unsafe_allow_html=True)
+                        f"<div class='rc-label'>Crisis Risk</div><div class='rc-count'>{counts['crisis']}</div></div>", unsafe_allow_html=True)
+        if sum(counts.values()) == 0:
+            st.caption(f"⚠️ No Risk_Level values matched. Raw values in your data: {risk_level_raw_values()}")
 
     with p3:
         st.markdown(f"<div class='panel-title'>Top Countries by GDP</div><div class='panel-sub'>{selected_year}</div>", unsafe_allow_html=True)
@@ -700,19 +734,20 @@ elif page == "Trade Analytics":
 elif page == "Global Risk Intelligence":
     hero("Risk Intelligence", "High-risk countries, anomaly patterns, and crisis warning signals")
 
-    counts = risk_df["Risk_Level"].astype(str).str.title().value_counts()
-    crisis_count = int((risk_df["Crisis_Alert"] == "Crisis Warning").sum())
+    counts = risk_level_counts()
     rc1, rc2, rc3, rc4 = st.columns(4)
-    for col, label, val, bg, border in [
-        (rc1, "Low Risk", int(counts.get("Low", 0)), "rgba(5,150,105,0.12)", "rgba(5,150,105,0.35)"),
-        (rc2, "Medium Risk", int(counts.get("Medium", 0)), "rgba(217,119,6,0.12)", "rgba(217,119,6,0.35)"),
-        (rc3, "High Risk", int(counts.get("High", 0)), "rgba(234,88,12,0.12)", "rgba(234,88,12,0.35)"),
-        (rc4, "Crisis Risk", crisis_count, "rgba(220,38,38,0.12)", "rgba(220,38,38,0.35)"),
+    for col, label, bucket, bg, border in [
+        (rc1, "Low Risk", "low", "rgba(5,150,105,0.12)", "rgba(5,150,105,0.35)"),
+        (rc2, "Medium Risk", "medium", "rgba(217,119,6,0.12)", "rgba(217,119,6,0.35)"),
+        (rc3, "High Risk", "high", "rgba(234,88,12,0.12)", "rgba(234,88,12,0.35)"),
+        (rc4, "Crisis Risk", "crisis", "rgba(220,38,38,0.12)", "rgba(220,38,38,0.35)"),
     ]:
         with col:
             st.markdown(f"<div class='risk-chip' style='background:{bg};border-color:{border};'>"
-                        f"<div class='rc-label'>{label}</div><div class='rc-count'>{val}</div>"
+                        f"<div class='rc-label'>{label}</div><div class='rc-count'>{counts[bucket]}</div>"
                         f"<div class='rc-label'>Countries</div></div>", unsafe_allow_html=True)
+    if sum(counts.values()) == 0:
+        st.caption(f"⚠️ No Risk_Level values matched. Raw values in your data: {risk_level_raw_values()}")
 
     top_risk = risk_df.sort_values("Global_Risk_Score", ascending=False).head(15).sort_values("Global_Risk_Score")
     fig = px.bar(top_risk, y="Country", x="Global_Risk_Score", color="Risk_Level", orientation="h", title="Top Risky Countries")
