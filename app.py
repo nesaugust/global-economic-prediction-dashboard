@@ -189,6 +189,34 @@ def load_data():
 
 df, risk_df, score_df, cluster_df, anomaly_df, recession_df = load_data()
 
+# Filter datasets by selected year
+def get_year_filtered_data(year):
+    risk_year_df = (
+        risk_df[risk_df["Year"] == year]
+        if "Year" in risk_df.columns
+        else risk_df
+    )
+
+    cluster_year_df = (
+        cluster_df[cluster_df["Year"] == year]
+        if "Year" in cluster_df.columns
+        else cluster_df
+    )
+
+    anomaly_year_df = (
+        anomaly_df[anomaly_df["Year"] == year]
+        if "Year" in anomaly_df.columns
+        else anomaly_df
+    )
+
+    recession_year_df = (
+        recession_df[recession_df["Year"] == year]
+        if "Year" in recession_df.columns
+        else recession_df
+    )
+
+    return risk_year_df, cluster_year_df, anomaly_year_df, recession_year_df
+
 RISK_LEVEL_ALIASES = {
     "low": {"low", "low risk", "minimal", "safe"},
     "medium": {"medium", "moderate", "mid", "medium risk", "average"},
@@ -759,7 +787,14 @@ elif page == "Trade Analytics":
 elif page == "Global Risk Intelligence":
     hero("Risk Intelligence", "High-risk countries, anomaly patterns, and crisis warning signals")
 
-    counts = risk_level_counts()
+    risk_year_df, _, anomaly_year_df, _ = get_year_filtered_data(selected_year)
+
+    counts = {
+    "low": (risk_year_df["Risk_Level"] == "Low Risk").sum(),
+    "medium": (risk_year_df["Risk_Level"] == "Medium Risk").sum(),
+    "high": (risk_year_df["Risk_Level"] == "High Risk").sum(),
+    "crisis": (risk_year_df["Risk_Level"] == "Crisis Risk").sum(),
+    }
     rc1, rc2, rc3, rc4 = st.columns(4)
     for col, label, bucket, bg, border in [
         (rc1, "Low Risk", "low", "rgba(5,150,105,0.12)", "rgba(5,150,105,0.35)"),
@@ -774,7 +809,10 @@ elif page == "Global Risk Intelligence":
     if sum(counts.values()) == 0:
         st.caption(f"⚠️ No Risk_Level values matched. Raw values in your data: {risk_level_raw_values()}")
 
-    top_risk = risk_df.sort_values("Global_Risk_Score", ascending=False).head(15).sort_values("Global_Risk_Score")
+    top_risk = risk_year_df.sort_values(
+    "Global_Risk_Score",
+    ascending=False
+    ).head(15)
     fig = px.bar(top_risk, y="Country", x="Global_Risk_Score", color="Risk_Level", orientation="h", title="Top Risky Countries")
     fig = style_fig(fig, height=520)
     st.plotly_chart(fig, use_container_width=True)
@@ -782,11 +820,17 @@ elif page == "Global Risk Intelligence":
     risk_cols = ["Country", "Global_Risk_Score", "Risk_Level"]
     if "Crisis_Alert" in risk_df.columns:
         risk_cols.append("Crisis_Alert")
-    styled_dataframe(risk_df.sort_values("Global_Risk_Score", ascending=False).head(15)[risk_cols], {"Global_Risk_Score": "{:.2f}"})
+    styled_dataframe(
+    risk_year_df.sort_values(
+        "Global_Risk_Score",
+        ascending=False
+    ).head(15)[risk_cols],
+    {"Global_Risk_Score": "{:.2f}"}
+    )
 
     st.markdown("### Anomaly Detection")
     anomaly_year = anomaly_df["Year"].max() if selected_year not in anomaly_df["Year"].unique() else selected_year
-    latest_anomaly = anomaly_df[anomaly_df["Year"] == anomaly_year]
+    latest_anomaly = anomaly_year_df
     fig = px.scatter(latest_anomaly, x="GDP_Growth", y="Inflation", color="Anomaly_Label", hover_name="Country",
                       title=f"Economic Anomaly Detection — {anomaly_year}")
     fig = style_fig(fig, height=480)
@@ -861,19 +905,24 @@ elif page == "AI Prediction":
 # ===============================
 elif page == "Country Clustering":
     hero("Country Analysis", "Segment countries using KMeans clustering and PCA-based economic positioning")
+    _, cluster_year_df, _, _ = get_year_filtered_data(selected_year)
 
-    fig = px.scatter(cluster_df, x="PCA1", y="PCA2", color="Cluster", hover_name="Country", title="Country Economic Segmentation")
+    fig = px.scatter(cluster_year_df, x="PCA1", y="PCA2", color="Cluster", hover_name="Country", title="Country Economic Segmentation")
     fig = style_fig(fig, height=520)
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("### Cluster Profile")
     cluster_features = ["GDP", "GDP_Growth", "Inflation", "Unemployment", "Trade_Balance", "Total_Reserves", "Stock_Growth"]
-    cluster_profile = cluster_df.groupby("Cluster")[cluster_features].mean()
+    cluster_profile = cluster_year_df.groupby("Cluster")[cluster_features].mean()
     styled_dataframe(cluster_profile)
 
     st.markdown("### Countries by Cluster")
-    selected_cluster = st.selectbox("Select cluster", sorted(cluster_df["Cluster"].unique()))
-    st.dataframe(cluster_df[cluster_df["Cluster"] == selected_cluster][["Country", "Cluster"]], use_container_width=True)
+    selected_cluster = st.selectbox(
+    "Select cluster",
+    sorted(cluster_year_df["Cluster"].unique())
+    )
+    st.dataframe(cluster_year_df[
+    cluster_year_df["Cluster"] == selected_cluster][["Country", "Cluster"]], use_container_width=True)
 
 # ===============================
 # PAGE 8 — DATA EXPLORER
