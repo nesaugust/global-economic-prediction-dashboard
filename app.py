@@ -355,37 +355,62 @@ def insight(text):
 
 
 def style_fig(fig, height=430, title=None):
-    # IMPORTANT: Plotly's own built-in `title` layout property is never used
-    # for rendering here, full stop — no conditionals. Some chart/Streamlit
-    # component combinations render an incomplete title object (one with no
-    # `text`) as the literal string "undefined", and since that's exactly the
-    # object Plotly Express creates whenever a chart is built without an
-    # explicit title= kwarg, the only bulletproof fix is to never let Plotly
-    # touch the title at all. Instead, we pull out whatever title text the
-    # chart was given (either passed in here, or set via px's title= kwarg)
-    # and print it ourselves as a plain HTML caption right above the chart.
-    resolved_title = title
-    if resolved_title is None and fig.layout.title is not None:
-        resolved_title = fig.layout.title.text
+    """Apply GEIP dashboard styling and prevent Plotly from showing `undefined` titles.
+
+    Use Streamlit/HTML headings above charts instead of Plotly's built-in title.
+    This removes the small `undefined` text that can appear inside charts.
+    """
+
+    # Only print a custom caption if you intentionally pass a clean title.
+    resolved_title = None
+    if title not in [None, "", "undefined", "Undefined"]:
+        resolved_title = title
+
+    # Remove any existing Plotly Express title/annotation completely.
+    fig.update_layout(title=dict(text=""))
+    fig.layout.title.text = ""
+    fig.layout.annotations = ()
 
     fig.update_layout(
-        template="plotly_dark", height=height,
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(2,6,23,0.18)",
+        template="plotly_dark",
+        height=height,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(2,6,23,0.18)",
         font=dict(family="Inter, Arial", size=13, color="#CBD5E1"),
-        title=None,
-        legend=dict(orientation="h", yanchor="bottom", y=1.03, xanchor="left", x=0, font=dict(color="#CBD5E1")),
-        margin=dict(l=42, r=28, t=54, b=46),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.03,
+            xanchor="left",
+            x=0,
+            font=dict(color="#CBD5E1"),
+        ),
+        margin=dict(l=42, r=28, t=34, b=46),
         hovermode="x unified",
+        colorway=["#3B82F6", "#38BDF8", "#818CF8", "#22C55E", "#F59E0B", "#EF4444"],
     )
-    fig.update_xaxes(showgrid=False, zeroline=False, showline=True, linecolor="rgba(148,163,184,0.18)",
-                      tickfont=dict(color="#94A3B8"), title_font=dict(color="#94A3B8"))
-    fig.update_yaxes(showgrid=True, gridcolor="rgba(148,163,184,0.10)", zeroline=False, showline=False,
-                      tickfont=dict(color="#94A3B8"), title_font=dict(color="#94A3B8"))
+
+    fig.update_xaxes(
+        showgrid=False,
+        zeroline=False,
+        showline=True,
+        linecolor="rgba(148,163,184,0.18)",
+        tickfont=dict(color="#94A3B8"),
+        title_font=dict(color="#94A3B8"),
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(148,163,184,0.10)",
+        zeroline=False,
+        showline=False,
+        tickfont=dict(color="#94A3B8"),
+        title_font=dict(color="#94A3B8"),
+    )
+
     try:
         fig.update_traces(marker=dict(size=6, line=dict(width=0)))
     except Exception:
         pass
-    fig.update_layout(colorway=["#3B82F6", "#38BDF8", "#818CF8", "#22C55E", "#F59E0B", "#EF4444"])
 
     if resolved_title:
         st.markdown(f"<div class='chart-caption'>{resolved_title}</div>", unsafe_allow_html=True)
