@@ -6,6 +6,15 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import joblib
 
+try:
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import PCA
+    from sklearn.cluster import KMeans
+except Exception:
+    StandardScaler = None
+    PCA = None
+    KMeans = None
+
 st.set_page_config(
     page_title="GEIP — Global Economic Intelligence Platform",
     page_icon="🌍",
@@ -38,17 +47,40 @@ section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #030712 0%, #07111f 55%, #020617 100%);
     border-right: 1px solid rgba(148,163,184,0.14);
 }
-section[data-testid="stSidebar"] * { color: #E5E7EB !important; }
+section[data-testid="stSidebar"] * { color: #CBD5E1 !important; }
 section[data-testid="stSidebar"] h1 { font-size: 22px !important; font-weight: 800 !important; }
+
+.sidebar-brand {
+    display:flex; align-items:center; gap:8px;
+    font-size:16px; font-weight:800; color:#E0F2FE;
+    margin: 6px 0 18px 2px;
+}
+.sidebar-brand .brand-dot {
+    width:18px; height:18px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(56,189,248,0.12);
+    border:1px solid rgba(125,211,252,0.35);
+    color:#7DD3FC !important; font-size:11px;
+}
 
 [data-testid="stSidebar"] div[role="radiogroup"] label {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 10px;
     padding: 0.55rem 0.7rem;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    transition: all .18s ease;
 }
-[data-testid="stSidebar"] div[role="radiogroup"] label:hover { background: rgba(37,99,235,0.14); }
+[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+    background: rgba(37,99,235,0.10);
+    border-color: rgba(96,165,250,0.16);
+}
+[data-testid="stSidebar"] div[role="radiogroup"] label p {
+    color: #CBD5E1 !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.01em;
+}
 
 /* Hide Streamlit's native radio circle marker — it's always the first child
    of the label, regardless of the exact data-baseweb attribute Streamlit
@@ -60,16 +92,25 @@ section[data-testid="stSidebar"] h1 { font-size: 22px !important; font-weight: 8
 /* Highlight the active nav row (progressive enhancement — harmless if
    :has() isn't supported, it just won't get the extra highlight). */
 [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
-    background: rgba(37,99,235,0.20);
-    border: 1px solid rgba(96,165,250,0.35);
+    background: linear-gradient(135deg, rgba(37,99,235,0.22), rgba(14,165,233,0.10));
+    border: 1px solid rgba(96,165,250,0.38);
+    box-shadow: inset 3px 0 0 #38BDF8;
+}
+[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+    color: #F8FAFC !important;
 }
 
 .nav-disabled {
-    color: #475569 !important;
-    font-size: 14px;
-    padding: 0.5rem 0.6rem;
+    color: #64748B !important;
+    font-size: 13px;
+    font-weight: 650;
+    padding: 0.5rem 0.7rem;
     border-radius: 12px;
     cursor: not-allowed;
+}
+.nav-disabled .nav-icon, .nav-label-icon {
+    color: #7DD3FC !important;
+    opacity: 0.9;
 }
 
 /* ---------- Top bar ---------- */
@@ -189,34 +230,6 @@ def load_data():
 
 df, risk_df, score_df, cluster_df, anomaly_df, recession_df = load_data()
 
-# Filter datasets by selected year
-def get_year_filtered_data(year):
-    risk_year_df = (
-        risk_df[risk_df["Year"] == year]
-        if "Year" in risk_df.columns
-        else risk_df
-    )
-
-    cluster_year_df = (
-        cluster_df[cluster_df["Year"] == year]
-        if "Year" in cluster_df.columns
-        else cluster_df
-    )
-
-    anomaly_year_df = (
-        anomaly_df[anomaly_df["Year"] == year]
-        if "Year" in anomaly_df.columns
-        else anomaly_df
-    )
-
-    recession_year_df = (
-        recession_df[recession_df["Year"] == year]
-        if "Year" in recession_df.columns
-        else recession_df
-    )
-
-    return risk_year_df, cluster_year_df, anomaly_year_df, recession_year_df
-
 RISK_LEVEL_ALIASES = {
     "low": {"low", "low risk", "minimal", "safe"},
     "medium": {"medium", "moderate", "mid", "medium risk", "average"},
@@ -225,33 +238,130 @@ RISK_LEVEL_ALIASES = {
 }
 
 
-def _normalized_risk_series():
-    return risk_df["Risk_Level"].astype(str).str.strip().str.lower()
+def _normalized_risk_series(source_df=None):
+    frame = risk_df if source_df is None else source_df
+    if "Risk_Level" not in frame.columns:
+        return pd.Series([], dtype=str)
+    return frame["Risk_Level"].astype(str).str.strip().str.lower()
 
 
-def risk_level_counts():
+def risk_level_counts(source_df=None):
     """Case/whitespace/synonym-tolerant counts for the four risk chips.
-    Falls back to 0 for a bucket only if truly nothing in Risk_Level matches
-    any known alias for it — which usually means the source CSV uses a label
-    we haven't seen yet (surfaced via risk_level_raw_values() below)."""
-    normalized = _normalized_risk_series()
+    Pass a year-filtered dataframe so KPI cards respond to the selected year."""
+    normalized = _normalized_risk_series(source_df)
     return {
         bucket: int(normalized.isin(aliases).sum())
         for bucket, aliases in RISK_LEVEL_ALIASES.items()
     }
 
 
-def risk_level_raw_values():
-    return sorted(risk_df["Risk_Level"].dropna().astype(str).unique().tolist())
+def risk_level_raw_values(source_df=None):
+    frame = risk_df if source_df is None else source_df
+    if "Risk_Level" not in frame.columns:
+        return []
+    return sorted(frame["Risk_Level"].dropna().astype(str).unique().tolist())
 
 
-if "Crisis_Alert" not in risk_df.columns:
-    _normalized = _normalized_risk_series()
+if "Crisis_Alert" not in risk_df.columns and "Risk_Level" in risk_df.columns:
+    _normalized = _normalized_risk_series(risk_df)
     risk_df["Crisis_Alert"] = np.where(
         _normalized.isin(RISK_LEVEL_ALIASES["crisis"] | RISK_LEVEL_ALIASES["high"]),
         "Crisis Warning",
         "Normal",
     )
+
+
+def _minmax(series, reverse=False):
+    values = pd.to_numeric(series, errors="coerce")
+    if reverse:
+        values = -values
+    low, high = values.min(), values.max()
+    if pd.isna(low) or pd.isna(high) or high == low:
+        return pd.Series(np.zeros(len(values)), index=values.index)
+    return (values - low) / (high - low)
+
+
+def build_year_risk_df(year):
+    """Return risk data for the selected year.
+    If risk_score_data.csv already has Year, use it. Otherwise compute a yearly
+    risk score from the main economic dataset so the page still changes by year."""
+    if "Year" in risk_df.columns:
+        frame = risk_df[risk_df["Year"] == year].copy()
+        if not frame.empty:
+            if "Crisis_Alert" not in frame.columns and "Risk_Level" in frame.columns:
+                norm = _normalized_risk_series(frame)
+                frame["Crisis_Alert"] = np.where(
+                    norm.isin(RISK_LEVEL_ALIASES["crisis"] | RISK_LEVEL_ALIASES["high"]),
+                    "Crisis Warning",
+                    "Normal",
+                )
+            return frame
+
+    frame = df[df["Year"] == year].copy()
+    if frame.empty:
+        return pd.DataFrame(columns=["Country", "Year", "Global_Risk_Score", "Risk_Level", "Crisis_Alert"])
+
+    risk_parts = []
+    for col, reverse in [
+        ("Inflation", False),
+        ("Unemployment", False),
+        ("GDP_Growth", True),
+        ("Trade_Balance", True),
+        ("Stock_Growth", True),
+    ]:
+        if col in frame.columns:
+            risk_parts.append(_minmax(frame[col], reverse=reverse))
+
+    if risk_parts:
+        risk_score = pd.concat(risk_parts, axis=1).mean(axis=1) * 100
+    else:
+        risk_score = pd.Series(np.zeros(len(frame)), index=frame.index)
+
+    out = frame[["Country", "Year"]].copy()
+    out["Global_Risk_Score"] = risk_score.round(2)
+    out["Risk_Level"] = pd.cut(
+        out["Global_Risk_Score"],
+        bins=[-0.01, 25, 50, 75, 100],
+        labels=["Low Risk", "Medium Risk", "High Risk", "Crisis Risk"],
+    ).astype(str)
+    out["Crisis_Alert"] = np.where(out["Global_Risk_Score"] >= 75, "Crisis Warning", "Normal")
+    return out
+
+
+def build_year_cluster_df(year):
+    """Return clustering data for the selected year.
+    If country_cluster_data.csv already has Year, use it. Otherwise recompute
+    PCA + KMeans from the main dataset for the chosen year."""
+    if "Year" in cluster_df.columns:
+        frame = cluster_df[cluster_df["Year"] == year].copy()
+        if not frame.empty:
+            return frame
+
+    frame = df[df["Year"] == year].copy()
+    cluster_features = [
+        c for c in ["GDP", "GDP_Growth", "Inflation", "Unemployment", "Trade_Balance", "Total_Reserves", "Stock_Growth"]
+        if c in frame.columns
+    ]
+    if frame.empty or len(cluster_features) < 2:
+        return pd.DataFrame(columns=["Country", "Year", "PCA1", "PCA2", "Cluster"] + cluster_features)
+
+    X = frame[cluster_features].apply(pd.to_numeric, errors="coerce")
+    X = X.fillna(X.median(numeric_only=True)).fillna(0)
+
+    if StandardScaler is not None and PCA is not None and KMeans is not None and len(X) >= 3:
+        X_scaled = StandardScaler().fit_transform(X)
+        pca_values = PCA(n_components=2, random_state=42).fit_transform(X_scaled)
+        k = min(4, len(X))
+        clusters = KMeans(n_clusters=k, random_state=42, n_init=10).fit_predict(X_scaled)
+    else:
+        pca_values = np.column_stack([X.iloc[:, 0].to_numpy(), X.iloc[:, 1].to_numpy()])
+        clusters = np.zeros(len(X), dtype=int)
+
+    out = frame[["Country", "Year"] + cluster_features].copy()
+    out["PCA1"] = pca_values[:, 0]
+    out["PCA2"] = pca_values[:, 1]
+    out["Cluster"] = clusters.astype(int)
+    return out
 
 # ---- Region mapping (used for the Inflation Heatmap, grouped like the mockup) ----
 REGION_MAP = {
@@ -468,25 +578,26 @@ def range_years(range_label, up_to_year):
 # ===============================
 # SIDEBAR NAV — icon rail like GEIP
 # ===============================
-st.sidebar.markdown("### 🌐  GEIP")
+st.sidebar.markdown("<div class='sidebar-brand'><span class='brand-dot'>◎</span><span>GEIP</span></div>", unsafe_allow_html=True)
 
 NAV_OPTIONS = [
-    "🏠 Overview",
-    "📊 Economy",
-    "💹 Markets",
-    "🌍 Trade",
-    "🛡️ Risk Intelligence",
-    "🤖 AI Predictions",
-    "🧭 Country Analysis",
-    "🗂️ Data Explorer",
+    "◎  Overview",
+    "▣  Economy",
+    "◇  Markets",
+    "◌  Trade",
+    "◉  Risk Intelligence",
+    "△  AI Predictions",
+    "⬡  Country Analysis",
+    "□  Data Explorer",
 ]
 nav_choice = st.sidebar.radio("Navigation", NAV_OPTIONS, label_visibility="collapsed")
 
 st.sidebar.markdown(
-    "<div class='nav-disabled'>📄 Reports</div>"
-    "<div class='nav-disabled'>🔔 Alerts</div>"
-    "<div class='nav-disabled'>⚙️ Settings</div>"
-    "<div style='font-size:10.5px;color:#334155;padding:4px 6px;'>Coming soon</div>",
+    "<div style='height:8px;'></div>"
+    "<div class='nav-disabled'><span class='nav-icon'>□</span>&nbsp;&nbsp;Reports</div>"
+    "<div class='nav-disabled'><span class='nav-icon'>○</span>&nbsp;&nbsp;Alerts</div>"
+    "<div class='nav-disabled'><span class='nav-icon'>◌</span>&nbsp;&nbsp;Settings</div>"
+    "<div style='font-size:10.5px;color:#475569;padding:4px 8px;'>Coming soon</div>",
     unsafe_allow_html=True,
 )
 
@@ -509,14 +620,14 @@ else:
 st.session_state["focus_country"] = selected_country
 
 page = {
-    "🏠 Overview": "Global Overview",
-    "📊 Economy": "Country Comparison",
-    "💹 Markets": "Financial Stability",
-    "🌍 Trade": "Trade Analytics",
-    "🛡️ Risk Intelligence": "Global Risk Intelligence",
-    "🤖 AI Predictions": "AI Prediction",
-    "🧭 Country Analysis": "Country Clustering",
-    "🗂️ Data Explorer": "Data Explorer",
+    "◎  Overview": "Global Overview",
+    "▣  Economy": "Country Comparison",
+    "◇  Markets": "Financial Stability",
+    "◌  Trade": "Trade Analytics",
+    "◉  Risk Intelligence": "Global Risk Intelligence",
+    "△  AI Predictions": "AI Prediction",
+    "⬡  Country Analysis": "Country Clustering",
+    "□  Data Explorer": "Data Explorer",
 }[nav_choice]
 
 prev_year = previous_year(selected_year)
@@ -785,16 +896,10 @@ elif page == "Trade Analytics":
 # PAGE 5 — RISK INTELLIGENCE
 # ===============================
 elif page == "Global Risk Intelligence":
-    hero("Risk Intelligence", "High-risk countries, anomaly patterns, and crisis warning signals")
+    hero("Risk Intelligence", f"High-risk countries, anomaly patterns, and crisis warning signals · {selected_year}")
 
-    risk_year_df, _, anomaly_year_df, _ = get_year_filtered_data(selected_year)
-
-    counts = {
-    "low": (risk_year_df["Risk_Level"] == "Low Risk").sum(),
-    "medium": (risk_year_df["Risk_Level"] == "Medium Risk").sum(),
-    "high": (risk_year_df["Risk_Level"] == "High Risk").sum(),
-    "crisis": (risk_year_df["Risk_Level"] == "Crisis Risk").sum(),
-    }
+    risk_year_df = build_year_risk_df(selected_year)
+    counts = risk_level_counts(risk_year_df)
     rc1, rc2, rc3, rc4 = st.columns(4)
     for col, label, bucket, bg, border in [
         (rc1, "Low Risk", "low", "rgba(5,150,105,0.12)", "rgba(5,150,105,0.35)"),
@@ -807,30 +912,27 @@ elif page == "Global Risk Intelligence":
                         f"<div class='rc-label'>{label}</div><div class='rc-count'>{counts[bucket]}</div>"
                         f"<div class='rc-label'>Countries</div></div>", unsafe_allow_html=True)
     if sum(counts.values()) == 0:
-        st.caption(f"⚠️ No Risk_Level values matched. Raw values in your data: {risk_level_raw_values()}")
+        st.caption(f"⚠️ No Risk_Level values matched for {selected_year}. Raw values in this year: {risk_level_raw_values(risk_year_df)}")
 
-    top_risk = risk_year_df.sort_values(
-    "Global_Risk_Score",
-    ascending=False
-    ).head(15)
+    top_risk = risk_year_df.sort_values("Global_Risk_Score", ascending=False).head(15).sort_values("Global_Risk_Score")
     fig = px.bar(top_risk, y="Country", x="Global_Risk_Score", color="Risk_Level", orientation="h", title="Top Risky Countries")
     fig = style_fig(fig, height=520)
     st.plotly_chart(fig, use_container_width=True)
 
     risk_cols = ["Country", "Global_Risk_Score", "Risk_Level"]
-    if "Crisis_Alert" in risk_df.columns:
+    if "Crisis_Alert" in risk_year_df.columns:
         risk_cols.append("Crisis_Alert")
-    styled_dataframe(
-    risk_year_df.sort_values(
-        "Global_Risk_Score",
-        ascending=False
-    ).head(15)[risk_cols],
-    {"Global_Risk_Score": "{:.2f}"}
-    )
+    styled_dataframe(risk_year_df.sort_values("Global_Risk_Score", ascending=False).head(15)[risk_cols], {"Global_Risk_Score": "{:.2f}"})
 
     st.markdown("### Anomaly Detection")
-    anomaly_year = anomaly_df["Year"].max() if selected_year not in anomaly_df["Year"].unique() else selected_year
-    latest_anomaly = anomaly_year_df
+    if "Year" in anomaly_df.columns and selected_year in anomaly_df["Year"].unique():
+        anomaly_year = selected_year
+    elif "Year" in anomaly_df.columns:
+        anomaly_year = anomaly_df["Year"].max()
+    else:
+        anomaly_year = selected_year
+
+    latest_anomaly = anomaly_df[anomaly_df["Year"] == anomaly_year] if "Year" in anomaly_df.columns else anomaly_df
     fig = px.scatter(latest_anomaly, x="GDP_Growth", y="Inflation", color="Anomaly_Label", hover_name="Country",
                       title=f"Economic Anomaly Detection — {anomaly_year}")
     fig = style_fig(fig, height=480)
@@ -904,8 +1006,9 @@ elif page == "AI Prediction":
 # PAGE 7 — COUNTRY ANALYSIS (clustering)
 # ===============================
 elif page == "Country Clustering":
-    hero("Country Analysis", "Segment countries using KMeans clustering and PCA-based economic positioning")
-    _, cluster_year_df, _, _ = get_year_filtered_data(selected_year)
+    hero("Country Analysis", f"Segment countries using KMeans clustering and PCA-based economic positioning · {selected_year}")
+
+    cluster_year_df = build_year_cluster_df(selected_year)
 
     fig = px.scatter(cluster_year_df, x="PCA1", y="PCA2", color="Cluster", hover_name="Country", title="Country Economic Segmentation")
     fig = style_fig(fig, height=520)
@@ -913,16 +1016,13 @@ elif page == "Country Clustering":
 
     st.markdown("### Cluster Profile")
     cluster_features = ["GDP", "GDP_Growth", "Inflation", "Unemployment", "Trade_Balance", "Total_Reserves", "Stock_Growth"]
-    cluster_profile = cluster_year_df.groupby("Cluster")[cluster_features].mean()
+    available_cluster_features = [c for c in cluster_features if c in cluster_year_df.columns]
+    cluster_profile = cluster_year_df.groupby("Cluster")[available_cluster_features].mean()
     styled_dataframe(cluster_profile)
 
     st.markdown("### Countries by Cluster")
-    selected_cluster = st.selectbox(
-    "Select cluster",
-    sorted(cluster_year_df["Cluster"].unique())
-    )
-    st.dataframe(cluster_year_df[
-    cluster_year_df["Cluster"] == selected_cluster][["Country", "Cluster"]], use_container_width=True)
+    selected_cluster = st.selectbox("Select cluster", sorted(cluster_year_df["Cluster"].unique()))
+    st.dataframe(cluster_year_df[cluster_year_df["Cluster"] == selected_cluster][["Country", "Cluster"]], use_container_width=True)
 
 # ===============================
 # PAGE 8 — DATA EXPLORER
