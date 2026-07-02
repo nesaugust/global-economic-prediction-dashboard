@@ -43,12 +43,26 @@ section[data-testid="stSidebar"] h1 { font-size: 22px !important; font-weight: 8
 
 [data-testid="stSidebar"] div[role="radiogroup"] label {
     background: transparent;
-    border-radius: 12px;
-    padding: 0.5rem 0.6rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
     margin-bottom: 2px;
 }
-[data-testid="stSidebar"] div[role="radiogroup"] label:hover { background: rgba(37,99,235,0.16); }
-[data-testid="stSidebar"] div[role="radiogroup"] label[data-baseweb="radio"] > div:first-child { display: none; }
+[data-testid="stSidebar"] div[role="radiogroup"] label:hover { background: rgba(37,99,235,0.14); }
+
+/* Hide Streamlit's native radio circle marker — it's always the first child
+   of the label, regardless of the exact data-baseweb attribute Streamlit
+   ships with, so target it structurally rather than by attribute. */
+[data-testid="stSidebar"] div[role="radiogroup"] label > div:first-child {
+    display: none !important;
+}
+
+/* Highlight the active nav row (progressive enhancement — harmless if
+   :has() isn't supported, it just won't get the extra highlight). */
+[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+    background: rgba(37,99,235,0.20);
+    border: 1px solid rgba(96,165,250,0.35);
+}
 
 .nav-disabled {
     color: #475569 !important;
@@ -310,17 +324,30 @@ def insight(text):
     )
 
 
-def style_fig(fig, height=430):
-    fig.update_layout(
+def style_fig(fig, height=430, title=None):
+    # Only ever touch the `title` layout property when there is real text to show.
+    # Setting title_x / title_font / etc. on a figure with NO title text forces
+    # Plotly to build an incomplete title object, which is what was rendering
+    # as the literal string "undefined". So: resolve the text first, and only
+    # pass a title kwarg to update_layout when text is non-empty.
+    resolved_title = title
+    if resolved_title is None and fig.layout.title is not None:
+        resolved_title = fig.layout.title.text
+
+    layout_kwargs = dict(
         template="plotly_dark", height=height,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(2,6,23,0.18)",
         font=dict(family="Inter, Arial", size=13, color="#CBD5E1"),
-        title_x=0.02, title_xanchor="left",
-        title_font=dict(size=17, color="#F8FAFC"),
         legend=dict(orientation="h", yanchor="bottom", y=1.03, xanchor="left", x=0, font=dict(color="#CBD5E1")),
         margin=dict(l=42, r=28, t=64, b=46),
         hovermode="x unified",
     )
+    if resolved_title:
+        layout_kwargs["title"] = dict(text=resolved_title, x=0.02, xanchor="left", font=dict(size=17, color="#F8FAFC"))
+    else:
+        layout_kwargs["title"] = None  # explicitly clear, never leave a text-less title object behind
+
+    fig.update_layout(**layout_kwargs)
     fig.update_xaxes(showgrid=False, zeroline=False, showline=True, linecolor="rgba(148,163,184,0.18)",
                       tickfont=dict(color="#94A3B8"), title_font=dict(color="#94A3B8"))
     fig.update_yaxes(showgrid=True, gridcolor="rgba(148,163,184,0.10)", zeroline=False, showline=False,
